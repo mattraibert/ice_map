@@ -1,11 +1,15 @@
 var map = L.map('map').setView([40.73451, -73.88786], 10);
-// add an OpenStreetMap tile layer
-//L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-//  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-//}).addTo(map)
+
+//OPENSTREETMAP TILE LAYER
+
+L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+//END OPENSTREETMAP TILE LAYER
+
 
 //ZIP CODES
-var zip;
 
 function getColor(d) {
   return d > 261 ? '#800026' :
@@ -34,13 +38,14 @@ function zipOnEachFeature(feature, layer) {
 
   layer.bindPopup(zipMsg);
 }
-//var cities = L.layerGroup([littleton, denver, aurora, golden]);
 
 var zip = L.geoJson(zipJSON, {style: zipStyle, onEachFeature: zipOnEachFeature}).addTo(map);
 
 //END ZIP CODES
 
+
 //CITY COUNCIL DISTRICTS
+
 function ccStyle(feature) {
   return { opacity: 1, fillOpacity: 0, fillColor: "#0f0" };
 }
@@ -50,11 +55,12 @@ function ccOnEachFeature(feature, layer) {
 		  " represented by " + feature.properties.cc_NAME );
 }
 cc = L.geoJson(ccJSON, {style: ccStyle, onEachFeature: ccOnEachFeature}).addTo(map);
+
 //END CITY COUNCIL DISTRICTS
 
 
-
 //LAYERS CONTROL
+
 var overlayMaps = {
   "City Council Districts": cc,
   "Zip codes": zip
@@ -63,6 +69,7 @@ var overlayMaps = {
 L.control.layers(null, overlayMaps).addTo(map);
 
 //END LAYERS CONTROL
+
 
 //LEGEND
 
