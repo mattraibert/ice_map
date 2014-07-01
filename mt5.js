@@ -47,7 +47,13 @@ var zip = L.geoJson(zipJSON, {style: zipStyle, onEachFeature: zipOnEachFeature})
 //CITY COUNCIL DISTRICTS
 
 function ccStyle(feature) {
-  return { opacity: 1, fillOpacity: 0, fillColor: "#0f0" };
+  return {
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0,
+    color: 'blue',
+    dashArray: '3'
+  };
 }
 
 function ccOnEachFeature(feature, layer) {
