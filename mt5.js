@@ -1,6 +1,7 @@
 var map = L.map('map').setView([40.73451, -73.88786], 10);
 
 //OPENSTREETMAP TILE LAYER
+var popupP = L.popup();
 
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -34,17 +35,15 @@ function zipStyle(feature) {
 }
 
 function zipOnEachFeature(feature, layer) {
-  var popup = L.popup();
   layer.on('click', function(e) {
     var ccP = leafletPip.pointInLayer(e.latlng, cc)[0].feature.properties
     var ccMsg = "City Council District " + ccP.CounDist + " represented by " + ccP.cc_NAME;
     var zipMsg = 'Zip code: ' + feature.properties.ZIP + '<br />' + feature.properties.x_ICEall + ' processed by ICE';
-    popup
+    popupP
       .setLatLng(e.latlng)
       .setContent(zipMsg + "<br />" + ccMsg)
       .openOn(map);
   });
-
 }
 
 var zip = L.geoJson(zipJSON, {style: zipStyle, onEachFeature: zipOnEachFeature}).addTo(map);
@@ -65,12 +64,11 @@ function ccStyle(feature) {
 }
 
 function ccOnEachFeature(feature, layer) {
-  var popup = L.popup();
   layer.on('click', function(e) {
     var zipP = leafletPip.pointInLayer(e.latlng, zip)[0].feature.properties
     var ccMsg = "City Council District " + feature.properties.CounDist + " represented by " + feature.properties.cc_NAME;
     var zipMsg = 'Zip code: ' + zipP.ZIP + '<br />' + zipP.x_ICEall + ' processed by ICE';
-    popup
+    popupP
       .setLatLng(e.latlng)
       .setContent(zipMsg + "<br />" + ccMsg)
       .openOn(map);
