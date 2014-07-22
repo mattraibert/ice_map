@@ -1,31 +1,20 @@
 var map = L.map('map').setView([40.73451, -73.88786], 10);
 
 //OPENSTREETMAP TILE LAYER
-var popupP = L.popup();
-
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map)
 
 //END OPENSTREETMAP TILE LAYER
-
-
+//
+//
+//
 //ZIP CODES
 
-function getColor(d) {
-  return d > 261 ? '#800026' :
-         d > 150 ? '#BD0026' :
-         d > 100 ? '#E31A1C' :
-         d > 40  ? '#FC4E2A' :
-         d > 15  ? '#FD8D3C' :
-         d > 5   ? '#FEB24C' :
-         d > 1   ? '#FED976' :
-                   '#FFEDA0' ;
-}
 
 function zipStyle(feature) {
   return {
-    fillColor: getColor(feature.properties.x_ICEall),
+    fillColor: getColor(feature.properties.n_ALLbyPOP),
     weight: 1,
     opacity: 1,
     color: 'white',
@@ -34,51 +23,101 @@ function zipStyle(feature) {
   };
 }
 
-function zipOnEachFeature(feature, layer) {
-  layer.on('click', function(e) {
-    var ccP = leafletPip.pointInLayer(e.latlng, cc)[0].feature.properties
-    var ccMsg = "City Council District " + ccP.CounDist + " represented by " + ccP.cc_NAME;
-    var zipMsg = 'Zip code: ' + feature.properties.ZIP + '<br />' + feature.properties.x_ICEall + ' processed by ICE';
-    popupP
-      .setLatLng(e.latlng)
-      .setContent(zipMsg + "<br />" + ccMsg)
-      .openOn(map);
-  });
+function getColor(d) {
+  return d > 21.7390 ? '#800026' :
+         d > 7.4960 ? '#BD0026' :
+	     d > 2.5340 ? '#E31A1C' :
+         d > 1.8780  ? '#FC4E2A' :
+         d > 1.2610   ? '#FEB24C' :
+         d > 0.6230   ? '#FED976' :
+                   '#FFEDA0' ;
 }
 
-var zip = L.geoJson(zipJSON, {style: zipStyle, onEachFeature: zipOnEachFeature}).addTo(map);
+var zip = L.geoJson(zipJSON, {style: zipStyle}).addTo(map);
 
-//END ZIP CODES
+//END ZIP
+//
+//
+//
+// CITY COUNCIL DISTRICTS
 
 
-//CITY COUNCIL DISTRICTS
+
+
+var cc = L.geoJson(ccJSON, {style: ccStyle, onEachFeature: ccOnEachFeature}).addTo(map);
+
 
 function ccStyle(feature) {
   return {
-    weight: 1,
+  weight: 2,
+  color: '#000',
     opacity: 1,
     fillOpacity: 0,
-    color: 'blue',
-    dashArray: '3'
   };
 }
 
-function ccOnEachFeature(feature, layer) {
-  layer.on('click', function(e) {
-    var zipP = leafletPip.pointInLayer(e.latlng, zip)[0].feature.properties
-    var ccMsg = "City Council District " + feature.properties.CounDist + " represented by " + feature.properties.cc_NAME;
-    var zipMsg = 'Zip code: ' + zipP.ZIP + '<br />' + zipP.x_ICEall + ' processed by ICE';
-    popupP
-      .setLatLng(e.latlng)
-      .setContent(zipMsg + "<br />" + ccMsg)
-      .openOn(map);
-  });
+
+
+
+function highlightCc(ccElement) {
+   ccElement.setStyle({
+            weight: 5,
+            color: '#666',
+            dashArray: '',
+            fillOpacity: 0.7
+    });
 }
-cc = L.geoJson(ccJSON, {style: ccStyle, onEachFeature: ccOnEachFeature}).addTo(map);
 
-//END CITY COUNCIL DISTRICTS
+function highlightZip(zipElement) {
+	zipElement.setStyle({color: 'magenta'});
+}
+
+function updateInfo(e) {
+	cc.resetStyle(cc);
+	zip.setStyle({color: 'white'});
+    var zipElement = leafletPip.pointInLayer(e.latlng, zip)[0];
+	var zipProps = zipElement.feature.properties;
+	var zipMsg = 'Zip code: ' + zipProps.ZIP + '<br />' + zipProps.x_ICEall + ' processed by ICE';
+    highlightZip(zipElement);
+
+	var ccElement = leafletPip.pointInLayer(e.latlng, cc)[0];
+	var ccProps = ccElement.properties;
+	var ccMsg = "City Council District " + ccProps.CounDist + " represented by " + ccProps.cc_NAME;
+	highlightCc(ccElement);
+
+	info.update(zipMsg + "<br />" + ccMsg);
+}
+
+function ccOnEachFeature(feature, layer) {
+
+	layer.on(
+		{
+            click: updateInfo
+            //mouseout: resetHighlight
+        });
+}
+     
+/// END CC
+
+/// INFO BOX
+ var info = L.control();
+
+      info.onAdd = function (map) {
+          this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+          this.update();
+          return this._div;
+      };
+
+      // method that we will use to update the control based on feature properties passed
+      info.update = function (message) {
+          this._div.innerHTML = '<h4>XXXXXX</h4>' +  (message ? message : 'click on a District');
+      };
+
+      info.addTo(map);
+//END INFO
 
 
+////////
 //LEGEND
 
 var legend = L.control({position: 'bottomright'});
@@ -86,9 +125,10 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function (map) {
 
   var div = L.DomUtil.create('div', 'info legend'),
-	grades = [0, 1, 5, 15, 40, 100, 200, 150, 261],
-	labels = [],
+	grades = [0, 0.6230, 1.2610, 1.8780, 2.5340, 7.4960, 21.7390],
+	labels = ['<center><strong> ICE Apprehensions by Zip Code </strong></center>'],
 	from, to;
+
 
   for (var i = 0; i < grades.length; i++) {
     from = grades[i];
@@ -96,7 +136,7 @@ legend.onAdd = function (map) {
 
     labels.push(
 	'<i style="background:' + getColor(from + 1) + '"></i> ' +
-	  from + (to ? '&ndash;' + to : '+'));
+	  from + (to ? '&ndash;' + to : '+') + "  per 1,000 people");
   }
 
   div.innerHTML = labels.join('<br>');
