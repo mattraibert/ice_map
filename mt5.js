@@ -11,26 +11,40 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 //
 //ZIP CODES
 
-
 function zipStyle(feature) {
   return {
     fillColor: getColor(feature.properties.n_ALLbyPOP),
-    weight: 1,
+    weight: 0,
     opacity: 1,
     color: 'white',
-    dashArray: '3',
+    dashArray: '',
     fillOpacity: 0.7
   };
 }
 
+function highlightZip(zipElement) {
+  zipElement.setStyle({
+    weight: 7,
+    color: 'darkgreen',
+  });
+}
+
+function resetZip(zipElement) {
+  zipElement.setStyle({
+    weight: 0,
+    color: 'white',
+  });
+}
+
+
+
 function getColor(d) {
   return d > 21.7390 ? '#800026' :
-         d > 7.4960 ? '#BD0026' :
-	     d > 2.5340 ? '#E31A1C' :
-         d > 1.8780  ? '#FC4E2A' :
-         d > 1.2610   ? '#FEB24C' :
-         d > 0.6230   ? '#FED976' :
-                   '#FFEDA0' ;
+    d > 7.4960 ? '#BD0026' :
+    d > 2.5340 ? '#E31A1C' :    d > 1.8780  ? '#FC4E2A' :
+    d > 1.2610   ? '#FEB24C' :
+    d > 0.6230   ? '#FED976' :
+    '#FFEDA0' ;
 }
 
 var zip = L.geoJson(zipJSON, {style: zipStyle}).addTo(map);
@@ -41,62 +55,49 @@ var zip = L.geoJson(zipJSON, {style: zipStyle}).addTo(map);
 //
 // CITY COUNCIL DISTRICTS
 
-
-
-
 var cc = L.geoJson(ccJSON, {style: ccStyle, onEachFeature: ccOnEachFeature}).addTo(map);
 
 
 function ccStyle(feature) {
   return {
-  weight: 2,
-  color: '#000',
+    weight: 1,
+    color: 'white',
     opacity: 1,
+    dashArray: '3',
     fillOpacity: 0,
   };
 }
 
-
-
-
 function highlightCc(ccElement) {
-   ccElement.setStyle({
-            weight: 5,
-            color: '#666',
-            dashArray: '',
-            fillOpacity: 0.7
-    });
-}
-
-function highlightZip(zipElement) {
-	zipElement.setStyle({color: 'magenta'});
+  ccElement.setStyle({
+    fillOpacity: 0.3,
+    color: 'black',
+    dashArray: ''
+  });
 }
 
 function updateInfo(e) {
-	cc.resetStyle(cc);
-	zip.setStyle({color: 'white'});
-    var zipElement = leafletPip.pointInLayer(e.latlng, zip)[0];
-	var zipProps = zipElement.feature.properties;
-	var zipMsg = 'Zip code: ' + zipProps.ZIP + '<br />' + zipProps.x_ICEall + ' processed by ICE';
-    highlightZip(zipElement);
+  cc.resetStyle(cc);
+  resetZip(zip);
+  var zipElement = leafletPip.pointInLayer(e.latlng, zip)[0];
+  var zipProps = zipElement.feature.properties;
+  var zipMsg = zipProps.x_ICEall ? 'Zip code: ' + zipProps.ZIP + '<br />' + zipProps.x_ICEall + ' processed by ICE' : 'no ICE data';
+  highlightZip(zipElement);
 
-	var ccElement = leafletPip.pointInLayer(e.latlng, cc)[0];
-	var ccProps = ccElement.properties;
-	var ccMsg = "City Council District " + ccProps.CounDist + " represented by " + ccProps.cc_NAME;
-	highlightCc(ccElement);
+  var ccElement = leafletPip.pointInLayer(e.latlng, cc)[0];
+  var ccProps = ccElement.feature.properties;
+  var ccMsg = "City Council District " + ccProps.CounDist + " represented by " + ccProps.cc_NAME;
+  highlightCc(ccElement);
 
-	info.update(zipMsg + "<br />" + ccMsg);
+  info.update(zipMsg + "<br />" + ccMsg);
 }
 
 function ccOnEachFeature(feature, layer) {
-
-	layer.on(
-		{
-            click: updateInfo
-            //mouseout: resetHighlight
-        });
+  layer.on(
+    {
+      click: updateInfo
+    });
 }
-     
 /// END CC
 
 /// INFO BOX
